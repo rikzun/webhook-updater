@@ -2,24 +2,17 @@ import http from 'http'
 import path from 'path'
 import { exec } from 'child_process'
 
-const REPOS = [
-    {
-        url: '', 
-        branches: [
-            {
-                name: '',
-                path: path.join(''),
-                commands: ['']
-            }
-        ]
-    }
-]
+const PORT = 3000
+const REPOS = []
 
 const server = http.createServer((req, res) => {
     const repo = REPOS.find(v => v.url === req.url)
     if (!repo) return end(404)
+
     let rawBody = ''
-    req.on('data', data => rawBody += data.toString('utf-8'))
+    req.on('data', (data) => {
+        rawBody += data.toString('utf-8')
+    })
 
     req.on('end', () => {
         let target = repo
@@ -29,7 +22,7 @@ const server = http.createServer((req, res) => {
             if (!branch) return end(404)
             target = branch
         }
-        exec(branch.commands.join(' && '), { cwd: branch.path })
+        exec(target.commands.join(' && '), { cwd: path.join(...target.path) })
         return end(200)
     })
 
@@ -39,4 +32,6 @@ const server = http.createServer((req, res) => {
     }
 })
 
-server.listen(3000, () => console.log('Watcher is running'))
+server.listen(PORT, () => {
+    console.log('Watcher is running')
+})
